@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AlgoVision</title>
+<style>
+:root{
+  --bg:#0b0f1e; --bg2:#111834; --panel:#141b3a; --border:#26305c;
+  --text:#eef1ff; --sub:#9aa3cc; --accent:#7c6cff; --accent2:#4fd1ff;
+  --compare:#ffb84f; --swap:#ff5f7e; --sorted:#4fd1ff;
+  font-size:16px;
+}
+:root:not([data-theme="dark"]){}
+:root[data-theme="light"]{
+  --bg:#f6f7fd; --bg2:#ffffff; --panel:#ffffff; --border:#dfe2f3;
+  --text:#161a34; --sub:#5a6089; --accent:#5b46e8; --accent2:#0891b2;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+  font-family:"Segoe UI",Inter,system-ui,-apple-system,sans-serif;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);}
+body{line-height:1.5;}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px;}
+
+/* NAV */
+nav{position:sticky;top:0;top:env(safe-area-inset-top,0px);z-index:20;
+  background:color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--border);}
+.navrow{display:flex;align-items:center;justify-content:space-between;height:64px;}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.15rem;letter-spacing:.2px;}
+.brand-mark{width:28px;height:28px;border-radius:8px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;font-size:.85rem;color:#fff;}
+.navlinks{display:flex;gap:28px;font-size:.92rem;color:var(--sub);}
+.navlinks a{text-decoration:none;cursor:pointer;transition:color .15s}
+.navlinks a:hover,.navlinks a.active{color:var(--text)}
+.navactions{display:flex;align-items:center;gap:12px;}
+.auth-guest, .auth-user{display:flex;align-items:center;gap:8px;}
+@media (max-width:760px){
+  .navactions .auth-guest, .navactions .auth-user{display:none !important;}
+}
+.iconbtn{width:38px;height:38px;border-radius:10px;border:1px solid var(--border);
+  background:var(--panel);color:var(--text);cursor:pointer;font-size:1rem;
+  display:flex;align-items:center;justify-content:center;}
+.hamburger{display:none;}
+@media (max-width:760px){
+  .navlinks{display:none}
+  .hamburger{display:flex}
+}
+.mobilemenu{display:none;flex-direction:column;gap:2px;padding:8px 0 16px;border-top:1px solid var(--border);}
+.mobilemenu.open{display:flex}
+.mobilemenu a{padding:10px 4px;color:var(--sub);text-decoration:none;font-size:.95rem;}
+
+/* HERO */
+.hero{padding:72px 0 56px;}
+.hero h1{font-size:clamp(2.1rem,5vw,3.2rem);line-height:1.12;margin:0 0 16px;max-width:14ch;letter-spacing:-.01em;}
+.hero p{color:var(--sub);max-width:56ch;font-size:1.05rem;margin:0 0 28px;}
+.hero-ctas{display:flex;gap:14px;flex-wrap:wrap;}
+.btn{border:none;cursor:pointer;font-size:.95rem;font-weight:600;padding:13px 22px;border-radius:10px;
+  transition:transform .12s, opacity .12s; font-family:inherit;}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+.btn-primary:hover{opacity:.92}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text);}
+.btn-ghost:hover{border-color:var(--accent);}
+
+.features{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:56px;}
+@media (max-width:900px){.features{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.features{grid-template-columns:1fr}}
+.feature{border:1px solid var(--border);background:var(--panel);border-radius:14px;padding:20px;}
+.feature h3{margin:0 0 6px;font-size:1rem;}
+.feature p{margin:0;color:var(--sub);font-size:.88rem;}
+
+section{padding:56px 0;}
+.sectionhead{margin-bottom:28px;}
+.sectionhead h2{font-size:1.7rem;margin:0 0 8px;}
+.sectionhead p{color:var(--sub);margin:0;max-width:60ch;}
+
+/* VISUALIZER */
+.viz-panel{border:1px solid var(--border);background:var(--panel);border-radius:16px;padding:24px;}
+.viz-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:20px;}
+select, input[type=range]{font-family:inherit;}
+select{background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:.9rem;}
+.ctrl-group{display:flex;align-items:center;gap:8px;color:var(--sub);font-size:.82rem;}
+.ctrl-group input[type=range]{accent-color:var(--accent);}
+.stage{display:flex;align-items:flex-end;gap:3px;height:260px;border-radius:10px;
+  background:var(--bg2);border:1px solid var(--border);padding:14px;overflow:hidden;}
+.bar{flex:1;background:var(--accent);border-radius:4px 4px 0 0;transition:height .18s ease, background .15s ease;min-width:2px;}
+.bar.compare{background:var(--compare);}
+.bar.swap{background:var(--swap);}
+.bar.sorted{background:var(--sorted);}
+.bar.found{background:#3ddc84;}
+.target-row{display:flex;align-items:center;gap:8px;color:var(--sub);font-size:.82rem;}
+.target-row input[type=number]{width:72px;background:var(--bg2);color:var(--text);border:1px solid var(--border);
+  border-radius:8px;padding:8px 10px;font-family:inherit;}
+.target-row select{background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-family:inherit;}
+
+/* GRAPH VISUALIZER */
+.graph-stage{width:100%;height:320px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);}
+.gnode-circle{fill:var(--panel);stroke:var(--border);stroke-width:2;transition:fill .18s ease, stroke .18s ease;}
+.gnode-circle.frontier{stroke:var(--accent);fill:var(--bg2);}
+.gnode-circle.current{fill:var(--compare);stroke:var(--compare);}
+.gnode-circle.visited{fill:var(--sorted);stroke:var(--sorted);}
+.gnode-label{fill:var(--text);font-size:13px;font-weight:600;text-anchor:middle;dominant-baseline:middle;pointer-events:none;}
+.gdist-label{fill:var(--accent2);font-size:11px;text-anchor:middle;pointer-events:none;}
+.gedge-line{stroke:var(--border);stroke-width:2;transition:stroke .18s ease, stroke-width .18s ease;}
+.gedge-line.active{stroke:var(--compare);stroke-width:3;}
+.gedge-weight{fill:var(--sub);font-size:11px;text-anchor:middle;pointer-events:none;}
+
+/* DATA STRUCTURE PLAYGROUNDS */
+.ds-input{background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:8px;
+  padding:9px 12px;font-family:inherit;font-size:.88rem;width:110px;}
+.ds-stage{display:flex;gap:10px;flex-wrap:wrap;align-items:center;min-height:110px;padding:18px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;}
+.ds-box{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.ds-box-val{width:52px;height:52px;display:flex;align-items:center;justify-content:center;
+  background:var(--panel);border:2px solid var(--border);border-radius:8px;font-weight:700;
+  transition:border-color .18s ease, background .18s ease, opacity .18s ease;}
+.ds-box-idx{font-size:.7rem;color:var(--sub);}
+.ds-box-val.compare{border-color:var(--compare);}
+.ds-box-val.found{border-color:#3ddc84;}
+.ds-box-val.newitem{border-color:var(--accent);}
+.ds-box-val.removing{opacity:.25;}
+.ds-arrow{color:var(--sub);font-size:1.3rem;}
+.ds-endcap{color:var(--sub);font-size:.85rem;align-self:center;}
+.explain-panel{margin-top:18px;border:1px dashed var(--border);border-radius:12px;padding:16px 18px;}
+.explain-panel h4{margin:0 0 4px;font-size:.9rem;}
+.explain-panel .sub2{color:var(--sub);font-size:.8rem;margin:0 0 10px;}
+.explain-row{font-size:.85rem;margin-bottom:6px;color:var(--sub);}
+.explain-row b{color:var(--text);}
+
+/* AUTH MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;
+  z-index:100;padding:20px;}
+.modal-box{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:28px;
+  width:100%;max-width:380px;}
+.modal-tabs{display:flex;align-items:center;gap:4px;margin-bottom:20px;}
+.modal-tab{flex:1;background:none;border:none;border-bottom:2px solid var(--border);color:var(--sub);
+  padding:10px 4px;font-size:.92rem;cursor:pointer;font-family:inherit;}
+.modal-tab.active{color:var(--text);border-bottom-color:var(--accent);font-weight:600;}
+.modal-close{background:none;border:none;color:var(--sub);font-size:1.1rem;cursor:pointer;padding:0 0 0 10px;}
+.auth-form{display:flex;flex-direction:column;gap:12px;}
+.auth-form input{width:100%;}
+.auth-error{color:var(--swap);font-size:.82rem;min-height:1em;}
+.auth-note{color:var(--sub);font-size:.78rem;margin:16px 0 0;text-align:center;}
+
+/* ALGORITHMS CATALOG */
+.catalog-tools{display:flex;flex-direction:column;gap:12px;margin-bottom:24px;}
+.search-input{width:100%;background:var(--panel);color:var(--text);border:1px solid var(--border);
+  border-radius:10px;padding:12px 14px;font-size:.95rem;font-family:inherit;}
+.chip-row{display:flex;gap:8px;flex-wrap:wrap;}
+.chip{border:1px solid var(--border);background:var(--panel);color:var(--sub);border-radius:999px;
+  padding:7px 14px;font-size:.82rem;cursor:pointer;}
+.chip.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.algo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+@media (max-width:900px){.algo-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:600px){.algo-grid{grid-template-columns:1fr}}
+.algo-card{border:1px solid var(--border);background:var(--panel);border-radius:14px;padding:18px;
+  display:flex;flex-direction:column;gap:10px;}
+.algo-card h3{margin:0;font-size:1rem;}
+.algo-card p{margin:0;color:var(--sub);font-size:.85rem;flex-grow:1;}
+.algo-meta{display:flex;gap:14px;font-size:.78rem;color:var(--sub);flex-wrap:wrap;}
+.algo-meta b{color:var(--text);}
+.algo-tag{align-self:flex-start;font-size:.72rem;color:var(--accent2);border:1px solid var(--border);
+  border-radius:999px;padding:3px 10px;}
+.algo-card .row{display:flex;gap:8px;}
+.link-btn{background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;
+  padding:10px 14px;font-size:.85rem;cursor:pointer;font-family:inherit;}
+.link-btn:hover{border-color:var(--accent);}
+
+/* LEARN / DETAILS (w3schools-style) */
+.details-layout{display:flex;gap:28px;align-items:flex-start;}
+@media (max-width:800px){.details-layout{flex-direction:column;}}
+.details-sidebar{width:220px;flex-shrink:0;border:1px solid var(--border);border-radius:12px;
+  background:var(--panel);overflow:hidden;position:sticky;top:84px;}
+@media (max-width:800px){.details-sidebar{width:100%;position:static;}}
+.sidebar-label{font-size:.72rem;color:var(--sub);padding:12px 16px 4px;}
+.sidebar-item{display:block;width:100%;text-align:left;background:none;border:none;color:var(--sub);
+  padding:10px 16px;font-size:.88rem;cursor:pointer;font-family:inherit;border-left:3px solid transparent;}
+.sidebar-item:hover{background:var(--bg2);color:var(--text);}
+.sidebar-item.active{color:var(--text);border-left-color:#04AA6D;background:var(--bg2);font-weight:600;}
+.details-content{flex-grow:1;min-width:0;}
+.details-content h3{font-size:1.4rem;margin:0 0 6px;}
+.details-content .sub{color:var(--sub);font-size:.92rem;margin:0 0 20px;}
+.details-content h4{font-size:.95rem;margin:22px 0 8px;}
+.code-block{background:#0d1117;color:#c9d1d9;border-radius:10px;padding:16px 18px;font-family:Consolas,Menlo,monospace;
+  font-size:.85rem;overflow-x:auto;white-space:pre;line-height:1.6;border-left:4px solid #04AA6D;}
+.complexity-table{width:100%;border-collapse:collapse;font-size:.88rem;margin-top:4px;}
+.complexity-table td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--sub);}
+.complexity-table td:first-child{color:var(--text);}
+.details-content ul{color:var(--sub);font-size:.9rem;padding-left:20px;}
+.tryit-btn{display:inline-block;background:#04AA6D;color:#fff;border:none;border-radius:6px;
+  padding:12px 22px;font-size:.9rem;font-weight:600;cursor:pointer;margin-top:22px;font-family:inherit;}
+.tryit-btn:hover{background:#059862;}
+
+/* QUIZ */
+.quiz-panel{border:1px solid var(--border);background:var(--panel);border-radius:16px;padding:28px;max-width:640px;}
+.quiz-progress{color:var(--sub);font-size:.82rem;margin-bottom:14px;}
+.quiz-q{font-size:1.15rem;margin:0 0 20px;}
+.quiz-opt{display:block;width:100%;text-align:left;padding:13px 16px;margin-bottom:10px;border-radius:10px;
+  border:1px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;font-size:.92rem;font-family:inherit;}
+.quiz-opt:hover{border-color:var(--accent);}
+.quiz-opt.correct{border-color:#3ddc84;background:color-mix(in srgb, #3ddc84 16%, var(--bg2));}
+.quiz-opt.wrong{border-color:var(--swap);background:color-mix(in srgb, var(--swap) 16%, var(--bg2));}
+.quiz-opt[disabled]{cursor:default;}
+.quiz-result{text-align:center;padding:20px 0;}
+.quiz-result .score{font-size:2.6rem;font-weight:700;margin:8px 0;}
+
+/* PROGRESS DASHBOARD */
+.progress-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:36px;}
+@media (max-width:700px){.progress-strip{grid-template-columns:1fr}}
+.stat-card{border:1px solid var(--border);background:var(--panel);border-radius:14px;padding:18px;}
+.stat-card .num{font-size:1.8rem;font-weight:700;}
+.stat-card .lbl{color:var(--sub);font-size:.82rem;margin-top:2px;}
+.viz-status{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:16px;font-size:.86rem;color:var(--sub);}
+.viz-status b{color:var(--text);font-weight:600;}
+.viz-buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+.btn-sm{padding:10px 16px;font-size:.86rem;border-radius:8px;}
+
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;}
+@media (max-width:760px){.about-grid{grid-template-columns:1fr}}
+.about-grid ul{color:var(--sub);padding-left:20px;margin:0;}
+.about-grid li{margin-bottom:8px;}
+
+footer{border-top:1px solid var(--border);padding:32px 0;color:var(--sub);font-size:.85rem;
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+
+.note-banner{border:1px dashed var(--border);border-radius:12px;padding:16px 18px;color:var(--sub);
+  font-size:.86rem;margin-top:14px;}
+
+@media (prefers-reduced-motion: reduce){
+  .bar{transition:none;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap navrow">
+    <div class="brand"><span class="brand-mark">AV</span> AlgoVision</div>
+    <div class="navlinks">
+      <a data-go="home" class="active">Home</a>
+      <a data-go="algorithms">Algorithms</a>
+      <a data-go="datastructures">Data Structures</a>
+      <a data-go="details">Learn</a>
+      <a data-go="visualizer">Visualizer</a>
+      <a data-go="quiz">Quiz</a>
+      <a data-go="about">About</a>
+    </div>
+    <div class="navactions">
+      <span class="auth-guest" id="authGuestDesktop">
+        <button class="link-btn btn-sm" id="navLoginBtn">Log In</button>
+        <button class="btn btn-primary btn-sm" id="navSignupBtn">Sign Up</button>
+      </span>
+      <span class="auth-user" id="authUserDesktop" style="display:none;">
+        <span class="auth-username-label" style="font-size:.85rem;color:var(--sub);margin-right:8px;"></span>
+        <button class="link-btn btn-sm" id="navLogoutBtn">Log Out</button>
+      </span>
+      <button class="iconbtn" id="themeToggle" title="Toggle theme">🌙</button>
+      <button class="iconbtn hamburger" id="hamburgerBtn">☰</button>
+    </div>
+  </div>
+  <div class="wrap mobilemenu" id="mobileMenu">
+    <a data-go="home">Home</a>
+    <a data-go="algorithms">Algorithms</a>
+    <a data-go="datastructures">Data Structures</a>
+    <a data-go="details">Learn</a>
+    <a data-go="visualizer">Visualizer</a>
+    <a data-go="quiz">Quiz</a>
+    <a data-go="about">About</a>
+    <div class="auth-guest" id="authGuestMobile" style="padding-top:10px;display:flex;gap:10px;">
+      <button class="link-btn btn-sm" id="mLoginBtn">Log In</button>
+      <button class="btn btn-primary btn-sm" id="mSignupBtn">Sign Up</button>
+    </div>
+    <div class="auth-user" id="authUserMobile" style="display:none;padding-top:10px;align-items:center;gap:10px;">
+      <span class="auth-username-label" style="font-size:.85rem;color:var(--sub);"></span>
+      <button class="link-btn btn-sm" id="mLogoutBtn">Log Out</button>
+    </div>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <section id="home">
+    <div class="hero">
+      <h1>Visualize. Understand. Master Algorithms.</h1>
+      <p>AlgoVision turns sorting algorithms from lines of code into something you can actually watch happen — bar by bar, comparison by comparison — so the logic finally clicks.</p>
+      <div class="hero-ctas">
+        <button class="btn btn-primary" data-go="visualizer">Try the Visualizer</button>
+        <button class="btn btn-ghost" data-go="about">What is AlgoVision?</button>
+      </div>
+    </div>
+    <div class="features">
+      <div class="feature"><h3>Live Execution</h3><p>Real algorithms run step-by-step, not scripted fakes.</p></div>
+      <div class="feature"><h3>Full Control</h3><p>Play, pause, single-step, or scrub the speed.</p></div>
+      <div class="feature"><h3>See the Logic</h3><p>Comparisons, swaps, and sorted regions are color-coded.</p></div>
+      <div class="feature"><h3>Beginner Friendly</h3><p>No setup — pick an algorithm and press play.</p></div>
+    </div>
+    <div class="progress-strip">
+      <div class="stat-card"><div class="num" id="statAlgos">0</div><div class="lbl">Algorithms explored</div></div>
+      <div class="stat-card"><div class="num" id="statQuiz">—</div><div class="lbl">Best quiz score</div></div>
+      <div class="stat-card"><div class="num" id="statLast">None yet</div><div class="lbl">Last visualized</div></div>
+    </div>
+  </section>
+
+  <section id="algorithms">
+    <div class="sectionhead">
+      <h2>Algorithms</h2>
+      <p>Search or filter by category and difficulty, then jump straight into the visualizer.</p>
+    </div>
+    <div class="catalog-tools">
+      <input type="text" id="algoSearch" class="search-input" placeholder="Search algorithms…">
+      <div class="chip-row" id="catChips"></div>
+      <div class="chip-row" id="diffChips"></div>
+    </div>
+    <div class="algo-grid" id="algoGrid"></div>
+  </section>
+
+  <section id="datastructures">
+    <div class="sectionhead">
+      <h2>Data Structures</h2>
+      <p>Pick a structure and try its core operations, one at a time.</p>
+    </div>
+    <div class="chip-row" style="margin-bottom:20px;">
+      <button class="chip active" id="dsChipArray">Array</button>
+      <button class="chip" id="dsChipList">Linked List</button>
+    </div>
+
+    <div class="viz-panel" id="arrayPanel">
+      <div class="viz-controls">
+        <input type="number" class="ds-input" id="arrValueInput" placeholder="Value">
+        <input type="number" class="ds-input" id="arrIndexInput" placeholder="Index (optional)">
+        <button class="btn btn-primary btn-sm" id="arrInsertBtn">Insert</button>
+        <button class="btn btn-ghost btn-sm" id="arrDeleteBtn">Delete</button>
+        <button class="btn btn-ghost btn-sm" id="arrSearchBtn">Search</button>
+        <button class="btn btn-ghost btn-sm" id="arrUpdateBtn">Update</button>
+        <button class="btn btn-ghost btn-sm" id="arrResetBtn">🎲 New Array</button>
+      </div>
+      <div class="ds-stage" id="arrayStage"></div>
+      <div class="viz-status"><span>Step: <b id="arrStepText">Select an operation to start.</b></span></div>
+      <div class="explain-panel">
+        <h4>📘 Operation Explanation</h4>
+        <p class="sub2">Why do we use this operation?</p>
+        <div class="explain-row"><b>Purpose:</b> <span id="arrPurpose">Select an operation to see its explanation.</span></div>
+        <div class="explain-row"><b>Example:</b> <span id="arrExample">Example will appear here.</span></div>
+        <div class="explain-row"><b>Time Complexity:</b> <span id="arrComplexity">Complexity will appear here.</span></div>
+      </div>
+    </div>
+
+    <div class="viz-panel" id="listPanel" style="display:none;">
+      <div class="viz-controls">
+        <input type="number" class="ds-input" id="listValueInput" placeholder="Value">
+        <button class="btn btn-primary btn-sm" id="listInsertHeadBtn">Insert at Head</button>
+        <button class="btn btn-primary btn-sm" id="listInsertTailBtn">Insert at Tail</button>
+        <button class="btn btn-ghost btn-sm" id="listDeleteBtn">Delete</button>
+        <button class="btn btn-ghost btn-sm" id="listSearchBtn">Search</button>
+        <button class="btn btn-ghost btn-sm" id="listResetBtn">🎲 New List</button>
+      </div>
+      <div class="ds-stage" id="listStage"></div>
+      <div class="viz-status"><span>Step: <b id="listStepText">Select an operation to start.</b></span></div>
+      <div class="explain-panel">
+        <h4>📘 Operation Explanation</h4>
+        <p class="sub2">Why do we use this operation?</p>
+        <div class="explain-row"><b>Purpose:</b> <span id="listPurpose">Select an operation to see its explanation.</span></div>
+        <div class="explain-row"><b>Example:</b> <span id="listExample">Example will appear here.</span></div>
+        <div class="explain-row"><b>Time Complexity:</b> <span id="listComplexity">Complexity will appear here.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="details">
+    <div class="sectionhead">
+      <h2>Learn</h2>
+      <p>Pick a topic from the menu — explanation, pseudocode, complexity, and a Try it Yourself link into the live visualizer.</p>
+    </div>
+    <div class="details-layout">
+      <aside class="details-sidebar" id="detailsSidebar"></aside>
+      <div class="details-content" id="detailsContent"></div>
+    </div>
+  </section>
+
+  <section id="visualizer">
+    <div class="sectionhead">
+      <h2>Sorting &amp; Searching Visualizer</h2>
+      <p>Pick an algorithm, randomize the array, and watch it execute in real time.</p>
+    </div>
+    <div class="viz-panel">
+      <div class="viz-controls">
+        <select id="algoSelect">
+          <option value="bubble">Bubble Sort</option>
+          <option value="selection">Selection Sort</option>
+          <option value="insertion">Insertion Sort</option>
+          <option value="merge">Merge Sort</option>
+          <option value="quick">Quick Sort</option>
+          <option value="linear">Linear Search</option>
+          <option value="binary">Binary Search</option>
+          <option value="bfs">Breadth-First Search</option>
+          <option value="dfs">Depth-First Search</option>
+          <option value="dijkstra">Dijkstra's Algorithm</option>
+        </select>
+        <div class="ctrl-group" id="sizeCtrlGroup">Size <input type="range" id="sizeSlider" min="8" max="60" value="30"></div>
+        <div class="ctrl-group">Speed <input type="range" id="speedSlider" min="1" max="100" value="60"></div>
+        <div class="target-row" id="targetRow" style="display:none;">Target <input type="number" id="targetInput"></div>
+        <div class="target-row" id="graphCtrlGroup" style="display:none;">Start node <select id="startNodeSelect"></select></div>
+        <button class="btn btn-ghost btn-sm" id="randomizeBtn">🎲 Randomize</button>
+      </div>
+      <div class="stage" id="stage"></div>
+      <svg id="graphStage" class="graph-stage" viewBox="0 0 640 320" style="display:none;"></svg>
+      <div class="viz-status">
+        <span>Status: <b id="statusText">Idle — press Start</b></span>
+        <span><span id="compLabel">Comparisons</span>: <b id="compCount">0</b></span>
+        <span><span id="swapLabel">Swaps</span>: <b id="swapCount">0</b></span>
+        <span>Step <b id="stepCount">0</b> / <b id="stepTotal">0</b></span>
+      </div>
+      <div class="viz-buttons">
+        <button class="btn btn-primary btn-sm" id="startBtn">▶ Start</button>
+        <button class="btn btn-ghost btn-sm" id="pauseBtn">⏸ Pause</button>
+        <button class="btn btn-ghost btn-sm" id="stepBtn">⏭ Step</button>
+        <button class="btn btn-ghost btn-sm" id="resetBtn">⟲ Reset</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="quiz">
+    <div class="sectionhead">
+      <h2>DSA Quiz</h2>
+      <p>10 quick questions to check what's sticking.</p>
+    </div>
+    <div class="quiz-panel" id="quizPanel"></div>
+  </section>
+
+  <section id="about">
+    <div class="sectionhead">
+      <h2>About AlgoVision</h2>
+      <p>AlgoVision is a visual learning platform designed to make Algorithms and Data Structures easier to understand through interactive animation and hands-on visualization.</p>
+    </div>
+    <div class="about-grid">
+      <div>
+        <h3 style="margin-top:0;font-size:1rem;">Mission</h3>
+        <p style="color:var(--sub);font-size:.92rem;">Replace static diagrams and dry pseudocode with algorithms you can actually watch run, so intuition builds before memorization does.</p>
+      </div>
+      <div>
+        <h3 style="margin-top:0;font-size:1rem;">Features</h3>
+        <ul>
+          <li>Interactive visualizations for sorting and searching</li>
+          <li>Step-by-step execution with play, pause, and single-step control</li>
+          <li>Real-time comparison and swap counts as each algorithm runs</li>
+          <li>A searchable, filterable catalog of algorithms</li>
+        </ul>
+      </div>
+      <div>
+        <h3 style="margin-top:0;font-size:1rem;">Benefits</h3>
+        <ul>
+          <li>See exactly why an algorithm behaves the way it does, not just what it outputs</li>
+          <li>Learn at your own pace — slow the animation down or step through by hand</li>
+          <li>Check understanding right away with the built-in quiz</li>
+          <li>No installs or accounts — it runs entirely in your browser</li>
+        </ul>
+      </div>
+      <div>
+        <h3 style="margin-top:0;font-size:1rem;">Technology</h3>
+        <ul>
+          <li>HTML5, CSS3, and vanilla JavaScript (ES6+)</li>
+          <li>Real, correct sort and search implementations — every step shown is genuinely executing</li>
+          <li>No backend; theme and progress are saved locally in your browser</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note-banner">
+      Still not included from the original spec: Stack, Queue, and Binary Search Tree playgrounds, and a step-by-step "Learning Mode" — ask and I'll add any of them next.
+    </div>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  <span>© 2026 AlgoVision</span>
+  <span>Built for learning, not for exams.</span>
+</footer>
+
+<div class="modal-overlay" id="authOverlay">
+  <div class="modal-box">
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tabLogin">Log In</button>
+      <button class="modal-tab" id="tabSignup">Sign Up</button>
+      <button class="modal-close" id="authCloseBtn">✕</button>
+    </div>
+    <div class="auth-form" id="loginForm">
+      <input type="text" class="ds-input" id="loginUsername" placeholder="Username">
+      <input type="password" class="ds-input" id="loginPassword" placeholder="Password">
+      <div class="auth-error" id="loginError"></div>
+      <button class="btn btn-primary" id="loginSubmitBtn">Log In</button>
+    </div>
+    <div class="auth-form" id="signupForm" style="display:none;">
+      <input type="text" class="ds-input" id="signupUsername" placeholder="Choose a username">
+      <input type="password" class="ds-input" id="signupPassword" placeholder="Choose a password (min 4 chars)">
+      <div class="auth-error" id="signupError"></div>
+      <button class="btn btn-primary" id="signupSubmitBtn">Sign Up</button>
+    </div>
+    <p class="auth-note">Demo account — saved only in this browser, not a real server.</p>
+  </div>
+</div>
+
+<script>
+// ---------- THEME ----------
+const root = document.documentElement;
+const themeToggle = document.getElementById('themeToggle');
+function applyTheme(t){
+  root.setAttribute('data-theme', t);
+  themeToggle.textContent = t === 'light' ? '☀️' : '🌙';
+  try{ localStorage.setItem('av-theme', t); }catch(e){}
+}
+let savedTheme = 'dark';
+try{ savedTheme = localStorage.getItem('av-theme') || 'dark'; }catch(e){}
+applyTheme(savedTheme);
+themeToggle.addEventListener('click', ()=>{
+  applyTheme(root.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+});
+
+// ---------- NAV ----------
+const sections = ['home','algorithms','datastructures','details','visualizer','quiz','about'];
+function go(id){
+  sections.forEach(s=>document.getElementById(s).style.display = s===id ? '' : 'none');
+  document.querySelectorAll('.navlinks a, .mobilemenu a').forEach(a=>{
+    a.classList.toggle('active', a.dataset.go===id);
+  });
+  document.getElementById('mobileMenu').classList.remove('open');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+document.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',()=>go(el.dataset.go)));
+document.getElementById('hamburgerBtn').addEventListener('click',()=>{
+  document.getElementById('mobileMenu').classList.toggle('open');
+});
+go('home');
+
+// ---------- AUTH (local-only demo login/signup, no real server) ----------
+function loadUsers(){ try{ return JSON.parse(localStorage.getItem('av-users')) || {}; }catch(e){ return {}; } }
+function saveUsers(u){ try{ localStorage.setItem('av-users', JSON.stringify(u)); }catch(e){} }
+function getCurrentUser(){ try{ return localStorage.getItem('av-current-user'); }catch(e){ return null; } }
+function setCurrentUser(name){ try{ name ? localStorage.setItem('av-current-user', name) : localStorage.removeItem('av-current-user'); }catch(e){} }
+
+const authOverlay = document.getElementById('authOverlay');
+function openAuth(mode){ authOverlay.style.display='flex'; switchAuthTab(mode||'login'); }
+function closeAuth(){ authOverlay.style.display='none'; clearAuthErrors(); }
+function switchAuthTab(mode){
+  const isLogin = mode==='login';
+  document.getElementById('tabLogin').classList.toggle('active', isLogin);
+  document.getElementById('tabSignup').classList.toggle('active', !isLogin);
+  document.getElementById('loginForm').style.display = isLogin ? '' : 'none';
+  document.getElementById('signupForm').style.display = isLogin ? 'none' : '';
+  clearAuthErrors();
+}
+function clearAuthErrors(){ document.getElementById('loginError').textContent=''; document.getElementById('signupError').textContent=''; }
+function updateAuthUI(){
+  const user = getCurrentUser();
+  document.querySelectorAll('.auth-guest').forEach(el=>el.style.display = user ? 'none' : '');
+  document.querySelectorAll('.auth-user').forEach(el=>el.style.display = user ? '' : 'none');
+  document.querySelectorAll('.auth-username-label').forEach(el=>el.textContent = user ? `Hi, ${user}` : '');
+  renderProgress();
+}
+function doLogin(){
+  const uname = document.getElementById('loginUsername').value.trim();
+  const pwd = document.getElementById('loginPassword').value;
+  const users = loadUsers();
+  if(!uname || !pwd){ document.getElementById('loginError').textContent = 'Enter a username and password.'; return; }
+  if(!users[uname] || users[uname]!==pwd){ document.getElementById('loginError').textContent = 'Incorrect username or password.'; return; }
+  setCurrentUser(uname); updateAuthUI(); closeAuth();
+}
+function doSignup(){
+  const uname = document.getElementById('signupUsername').value.trim();
+  const pwd = document.getElementById('signupPassword').value;
+  if(!uname || !pwd){ document.getElementById('signupError').textContent = 'Choose a username and password.'; return; }
+  if(pwd.length<4){ document.getElementById('signupError').textContent = 'Password must be at least 4 characters.'; return; }
+  const users = loadUsers();
+  if(users[uname]){ document.getElementById('signupError').textContent = 'That username is already taken.'; return; }
+  users[uname]=pwd; saveUsers(users);
+  setCurrentUser(uname); updateAuthUI(); closeAuth();
+}
+function doLogout(){ setCurrentUser(null); updateAuthUI(); }
+
+document.getElementById('navLoginBtn').addEventListener('click', ()=>openAuth('login'));
+document.getElementById('navSignupBtn').addEventListener('click', ()=>openAuth('signup'));
+document.getElementById('mLoginBtn').addEventListener('click', ()=>openAuth('login'));
+document.getElementById('mSignupBtn').addEventListener('click', ()=>openAuth('signup'));
+document.getElementById('navLogoutBtn').addEventListener('click', doLogout);
+document.getElementById('mLogoutBtn').addEventListener('click', doLogout);
+document.getElementById('tabLogin').addEventListener('click', ()=>switchAuthTab('login'));
+document.getElementById('tabSignup').addEventListener('click', ()=>switchAuthTab('signup'));
+document.getElementById('authCloseBtn').addEventListener('click', closeAuth);
+authOverlay.addEventListener('click', (e)=>{ if(e.target===authOverlay) closeAuth(); });
+document.getElementById('loginSubmitBtn').addEventListener('click', doLogin);
+document.getElementById('signupSubmitBtn').addEventListener('click', doSignup);
+
+// ---------- PROGRESS (localStorage, per logged-in user) ----------
+function progressKey(){ return 'av-progress:' + (getCurrentUser() || 'guest'); }
+function loadProgress(){
+  try{ return JSON.parse(localStorage.getItem(progressKey())) || {algos:[], quizBest:null}; }
+  catch(e){ return {algos:[], quizBest:null}; }
+}
+function saveProgress(p){ try{ localStorage.setItem(progressKey(), JSON.stringify(p)); }catch(e){} }
+function renderProgress(){
+  const p = loadProgress();
+  document.getElementById('statAlgos').textContent = p.algos.length;
+  document.getElementById('statQuiz').textContent = p.quizBest===null ? '—' : p.quizBest+' / 10';
+  document.getElementById('statLast').textContent = p.algos.length ? p.algos[p.algos.length-1] : 'None yet';
+}
+function markAlgoExplored(name){
+  const p = loadProgress();
+  p.algos = p.algos.filter(a=>a!==name);
+  p.algos.push(name);
+  saveProgress(p);
+  renderProgress();
+}
+function markQuizScore(score){
+  const p = loadProgress();
+  if(p.quizBest===null || score>p.quizBest) p.quizBest = score;
+  saveProgress(p);
+  renderProgress();
+}
+updateAuthUI();
+
+// ---------- ALGORITHMS CATALOG ----------
+const ALGORITHMS = [
+  {id:'linear', name:'Linear Search', cat:'Searching', diff:'Beginner', time:'O(n)', space:'O(1)', desc:'Checks each element in order until the target turns up.'},
+  {id:'binary', name:'Binary Search', cat:'Searching', diff:'Beginner', time:'O(log n)', space:'O(1)', desc:'Repeatedly halves a sorted array to close in on the target.'},
+  {id:'bubble', name:'Bubble Sort', cat:'Sorting', diff:'Beginner', time:'O(n²)', space:'O(1)', desc:'Repeatedly swaps adjacent elements that are out of order.'},
+  {id:'selection', name:'Selection Sort', cat:'Sorting', diff:'Beginner', time:'O(n²)', space:'O(1)', desc:'Picks the smallest remaining element on every pass.'},
+  {id:'insertion', name:'Insertion Sort', cat:'Sorting', diff:'Beginner', time:'O(n²)', space:'O(1)', desc:'Builds up a sorted section one element at a time.'},
+  {id:'merge', name:'Merge Sort', cat:'Sorting', diff:'Intermediate', time:'O(n log n)', space:'O(n)', desc:'Splits the array in half, sorts each half, then merges.'},
+  {id:'quick', name:'Quick Sort', cat:'Sorting', diff:'Intermediate', time:'O(n log n)', space:'O(log n)', desc:'Partitions around a pivot and recurses on each side.'},
+  {id:'bfs', name:'Breadth-First Search', cat:'Graph', diff:'Intermediate', time:'O(V+E)', space:'O(V)', desc:'Explores a graph level by level using a queue.'},
+  {id:'dfs', name:'Depth-First Search', cat:'Graph', diff:'Intermediate', time:'O(V+E)', space:'O(V)', desc:'Explores a graph by diving deep before backtracking.'},
+  {id:'dijkstra', name:"Dijkstra's Algorithm", cat:'Graph', diff:'Advanced', time:'O(E log V)', space:'O(V)', desc:'Finds shortest paths from a source using a priority queue.'},
+];
+let activeCat = 'All', activeDiff = 'All';
+const catChips = document.getElementById('catChips');
+const diffChips = document.getElementById('diffChips');
+['All','Sorting','Searching','Graph'].forEach(c=>{
+  const el = document.createElement('button'); el.className='chip'+(c==='All'?' active':''); el.textContent=c;
+  el.addEventListener('click',()=>{ activeCat=c; [...catChips.children].forEach(x=>x.classList.toggle('active',x===el)); renderCatalog(); });
+  catChips.appendChild(el);
+});
+['All','Beginner','Intermediate','Advanced'].forEach(d=>{
+  const el = document.createElement('button'); el.className='chip'+(d==='All'?' active':''); el.textContent=d;
+  el.addEventListener('click',()=>{ activeDiff=d; [...diffChips.children].forEach(x=>x.classList.toggle('active',x===el)); renderCatalog(); });
+  diffChips.appendChild(el);
+});
+document.getElementById('algoSearch').addEventListener('input', renderCatalog);
+function renderCatalog(){
+  const q = document.getElementById('algoSearch').value.trim().toLowerCase();
+  const grid = document.getElementById('algoGrid');
+  grid.innerHTML = '';
+  ALGORITHMS.filter(a=>
+    (activeCat==='All'||a.cat===activeCat) &&
+    (activeDiff==='All'||a.diff===activeDiff) &&
+    (!q || a.name.toLowerCase().includes(q) || a.desc.toLowerCase().includes(q))
+  ).forEach(a=>{
+    const card = document.createElement('div'); card.className='algo-card';
+    card.innerHTML = `<span class="algo-tag">${a.cat}</span><h3>${a.name}</h3><p>${a.desc}</p>
+      <div class="algo-meta"><span>Difficulty <b>${a.diff}</b></span><span>Time <b>${a.time}</b></span><span>Space <b>${a.space}</b></span></div>`;
+    const btn = document.createElement('button'); btn.className='btn btn-primary btn-sm';
+    btn.textContent = a.soon ? 'Coming soon' : 'Visualize';
+    if(a.soon){ btn.disabled=true; btn.style.opacity=.5; btn.style.cursor='default'; }
+    else btn.addEventListener('click', ()=>{ go('visualizer'); algoSelect.value=a.id; rebuild(); });
+    const row = document.createElement('div'); row.className='row';
+    row.appendChild(btn);
+    if(!a.soon){
+      const dbtn = document.createElement('button'); dbtn.className='link-btn'; dbtn.textContent='Details';
+      dbtn.addEventListener('click', ()=>{ go('details'); renderDetails(a.id); });
+      row.appendChild(dbtn);
+    }
+    card.appendChild(row);
+    grid.appendChild(card);
+  });
+  if(!grid.children.length){ grid.innerHTML = '<p style="color:var(--sub)">No algorithms match those filters.</p>'; }
+}
+renderCatalog();
+
+// ---------- DATA STRUCTURES: ARRAY & LINKED LIST ----------
+function sleep(ms){ return new Promise(res=>setTimeout(res, ms)); }
+function dsRandomValues(n){ return Array.from({length:n}, ()=> 1 + Math.floor(Math.random()*99)); }
+
+document.getElementById('dsChipArray').addEventListener('click', ()=>{
+  document.getElementById('dsChipArray').classList.add('active');
+  document.getElementById('dsChipList').classList.remove('active');
+  document.getElementById('arrayPanel').style.display = '';
+  document.getElementById('listPanel').style.display = 'none';
+});
+document.getElementById('dsChipList').addEventListener('click', ()=>{
+  document.getElementById('dsChipList').classList.add('active');
+  document.getElementById('dsChipArray').classList.remove('active');
+  document.getElementById('listPanel').style.display = '';
+  document.getElementById('arrayPanel').style.display = 'none';
+});
+
+// --- Array playground ---
+let arr = dsRandomValues(6);
+const arrStage = document.getElementById('arrayStage');
+const arrStepText = document.getElementById('arrStepText');
+function renderArray(highlightIdx, highlightClass){
+  arrStage.innerHTML = '';
+  arr.forEach((v,i)=>{
+    const box = document.createElement('div'); box.className='ds-box';
+    const val = document.createElement('div'); val.className='ds-box-val';
+    if(i===highlightIdx) val.classList.add(highlightClass || 'compare');
+    val.textContent = v;
+    const idx = document.createElement('div'); idx.className='ds-box-idx'; idx.textContent = i;
+    box.appendChild(val); box.appendChild(idx);
+    arrStage.appendChild(box);
+  });
+  if(!arr.length) arrStage.innerHTML = '<span style="color:var(--sub);font-size:.88rem;">Array is empty.</span>';
+}
+function setArrExplain(purpose, example, complexity){
+  document.getElementById('arrPurpose').textContent = purpose;
+  document.getElementById('arrExample').textContent = example;
+  document.getElementById('arrComplexity').textContent = complexity;
+}
+renderArray();
+document.getElementById('arrResetBtn').addEventListener('click', ()=>{
+  arr = dsRandomValues(6); renderArray();
+  arrStepText.textContent = 'New array created.';
+  setArrExplain('Select an operation to see its explanation.','Example will appear here.','Complexity will appear here.');
+});
+document.getElementById('arrInsertBtn').addEventListener('click', ()=>{
+  const v = parseInt(document.getElementById('arrValueInput').value, 10);
+  if(isNaN(v)){ arrStepText.textContent = 'Enter a value to insert.'; return; }
+  let idx = parseInt(document.getElementById('arrIndexInput').value, 10);
+  if(isNaN(idx)) idx = arr.length;
+  idx = Math.max(0, Math.min(idx, arr.length));
+  arr.splice(idx, 0, v);
+  renderArray(idx, 'newitem');
+  arrStepText.textContent = `Inserted ${v} at index ${idx}.`;
+  setArrExplain('Insertion adds a new element at a chosen position, shifting later elements one slot to the right.',
+    `Inserted ${v} at index ${idx}.`, 'O(n) in general — O(1) when inserting at the end.');
+});
+document.getElementById('arrDeleteBtn').addEventListener('click', async ()=>{
+  let idx = parseInt(document.getElementById('arrIndexInput').value, 10);
+  if(isNaN(idx)) idx = arr.length-1;
+  if(idx<0 || idx>=arr.length){ arrStepText.textContent = 'Nothing to delete at that index.'; return; }
+  const removed = arr[idx];
+  renderArray(idx, 'removing');
+  arrStepText.textContent = `Deleting value at index ${idx}…`;
+  await sleep(300);
+  arr.splice(idx,1);
+  renderArray();
+  arrStepText.textContent = `Deleted ${removed} from index ${idx}.`;
+  setArrExplain('Deletion removes an element and shifts the elements after it one slot to the left to close the gap.',
+    `Removed ${removed} from index ${idx}.`, 'O(n) — later elements must shift down.');
+});
+document.getElementById('arrSearchBtn').addEventListener('click', async ()=>{
+  const v = parseInt(document.getElementById('arrValueInput').value, 10);
+  if(isNaN(v)){ arrStepText.textContent = 'Enter a value to search for.'; return; }
+  setArrExplain('Linear Search checks each element in order until it finds the target or runs out of elements.',
+    `Searching for ${v}.`, 'O(n) worst case.');
+  for(let i=0;i<arr.length;i++){
+    renderArray(i,'compare');
+    arrStepText.textContent = `Comparing index ${i} (${arr[i]}) to ${v}…`;
+    await sleep(280);
+    if(arr[i]===v){ renderArray(i,'found'); arrStepText.textContent = `Found ${v} at index ${i}.`; return; }
+  }
+  renderArray();
+  arrStepText.textContent = `${v} was not found in the array.`;
+});
+document.getElementById('arrUpdateBtn').addEventListener('click', ()=>{
+  const v = parseInt(document.getElementById('arrValueInput').value, 10);
+  const idx = parseInt(document.getElementById('arrIndexInput').value, 10);
+  if(isNaN(v) || isNaN(idx) || idx<0 || idx>=arr.length){ arrStepText.textContent = 'Enter a valid value and an existing index to update.'; return; }
+  const old = arr[idx]; arr[idx] = v;
+  renderArray(idx,'newitem');
+  arrStepText.textContent = `Updated index ${idx} from ${old} to ${v}.`;
+  setArrExplain('Update overwrites the value stored at a specific index directly, with no shifting needed.',
+    `Index ${idx} changed from ${old} to ${v}.`, 'O(1) — direct access by index.');
+});
+
+// --- Linked List playground ---
+let list = dsRandomValues(4);
+const listStage = document.getElementById('listStage');
+const listStepText = document.getElementById('listStepText');
+function renderList(highlightIdx, highlightClass){
+  listStage.innerHTML = '';
+  const head = document.createElement('span'); head.className='ds-endcap'; head.textContent='HEAD →';
+  listStage.appendChild(head);
+  list.forEach((v,i)=>{
+    const box = document.createElement('div'); box.className='ds-box';
+    const val = document.createElement('div'); val.className='ds-box-val';
+    if(i===highlightIdx) val.classList.add(highlightClass || 'compare');
+    val.textContent = v;
+    box.appendChild(val);
+    listStage.appendChild(box);
+    if(i < list.length-1){ const arrow = document.createElement('span'); arrow.className='ds-arrow'; arrow.textContent='→'; listStage.appendChild(arrow); }
+  });
+  const tail = document.createElement('span'); tail.className='ds-endcap'; tail.textContent = list.length ? '→ NULL' : '(empty list)';
+  listStage.appendChild(tail);
+}
+function setListExplain(purpose, example, complexity){
+  document.getElementById('listPurpose').textContent = purpose;
+  document.getElementById('listExample').textContent = example;
+  document.getElementById('listComplexity').textContent = complexity;
+}
+renderList();
+document.getElementById('listResetBtn').addEventListener('click', ()=>{
+  list = dsRandomValues(4); renderList();
+  listStepText.textContent = 'New linked list created.';
+  setListExplain('Select an operation to see its explanation.','Example will appear here.','Complexity will appear here.');
+});
+document.getElementById('listInsertHeadBtn').addEventListener('click', ()=>{
+  const v = parseInt(document.getElementById('listValueInput').value, 10);
+  if(isNaN(v)){ listStepText.textContent = 'Enter a value to insert.'; return; }
+  list.unshift(v);
+  renderList(0,'newitem');
+  listStepText.textContent = `Inserted ${v} at the head.`;
+  setListExplain('Insert at Head creates a new node, points it to the current head, then makes it the new head — no shifting required.',
+    `${v} is now the first node.`, 'O(1) — only the head pointer changes.');
+});
+document.getElementById('listInsertTailBtn').addEventListener('click', ()=>{
+  const v = parseInt(document.getElementById('listValueInput').value, 10);
+  if(isNaN(v)){ listStepText.textContent = 'Enter a value to insert.'; return; }
+  list.push(v);
+  renderList(list.length-1,'newitem');
+  listStepText.textContent = `Inserted ${v} at the tail.`;
+  setListExplain('Insert at Tail walks node by node to the end of the list, then links a new node after the last one.',
+    `${v} is now the last node.`, 'O(n) — the list must be traversed to find the end.');
+});
+document.getElementById('listDeleteBtn').addEventListener('click', async ()=>{
+  const v = parseInt(document.getElementById('listValueInput').value, 10);
+  if(isNaN(v)){ listStepText.textContent = 'Enter a value to delete.'; return; }
+  const idx = list.indexOf(v);
+  if(idx===-1){ listStepText.textContent = `${v} was not found in the list.`; return; }
+  renderList(idx,'removing');
+  listStepText.textContent = `Deleting ${v}…`;
+  await sleep(300);
+  list.splice(idx,1);
+  renderList();
+  listStepText.textContent = `Deleted ${v} from the list.`;
+  setListExplain('Deletion finds the target node and re-links the previous node directly to the next one, skipping over it.',
+    `${v} was removed and its neighbors were re-linked.`, 'O(n) — finding the node takes a full traversal.');
+});
+document.getElementById('listSearchBtn').addEventListener('click', async ()=>{
+  const v = parseInt(document.getElementById('listValueInput').value, 10);
+  if(isNaN(v)){ listStepText.textContent = 'Enter a value to search for.'; return; }
+  setListExplain('Search follows the chain of next-pointers one node at a time, since a linked list has no direct index access.',
+    `Searching for ${v}.`, 'O(n) worst case.');
+  for(let i=0;i<list.length;i++){
+    renderList(i,'compare');
+    listStepText.textContent = `Visiting node ${i} (${list[i]})…`;
+    await sleep(280);
+    if(list[i]===v){ renderList(i,'found'); listStepText.textContent = `Found ${v} at node ${i}.`; return; }
+  }
+  renderList();
+  listStepText.textContent = `${v} was not found in the list.`;
+});
+
+// ---------- LEARN / DETAILS (w3schools-style tutorial page) ----------
+const DETAILS = {
+  bubble: { group:'Sorting', name:'Bubble Sort',
+    explain:'Bubble Sort repeatedly steps through the array, compares each pair of neighbors, and swaps them if they are in the wrong order. Larger values "bubble" toward the end with every pass.',
+    example:'Imagine tidying a shelf of books by comparing each neighboring pair and swapping until nothing is out of place.',
+    pseudo:'for i from 0 to n-1\n  for j from 0 to n-i-2\n    if arr[j] > arr[j+1]\n      swap(arr[j], arr[j+1])',
+    c:{best:'O(n)', avg:'O(n\u00B2)', worst:'O(n\u00B2)', space:'O(1)'},
+    pros:['Simple to understand and implement','Can detect an already-sorted array in one pass'],
+    cons:['Very slow on large datasets','Rarely used outside teaching'] },
+  selection: { group:'Sorting', name:'Selection Sort',
+    explain:'Selection Sort divides the array into a sorted and unsorted part, repeatedly finds the smallest element in the unsorted part, and moves it to the end of the sorted part.',
+    example:'Like picking the smallest card from a spread hand, one at a time, and placing it in order.',
+    pseudo:'for i from 0 to n-1\n  min = i\n  for j from i+1 to n-1\n    if arr[j] < arr[min]\n      min = j\n  swap(arr[i], arr[min])',
+    c:{best:'O(n\u00B2)', avg:'O(n\u00B2)', worst:'O(n\u00B2)', space:'O(1)'},
+    pros:['Simple, predictable number of swaps','Works well when writes are costly'],
+    cons:['Always O(n\u00B2) even if already sorted','Slower than Insertion Sort in practice'] },
+  insertion: { group:'Sorting', name:'Insertion Sort',
+    explain:'Insertion Sort builds a sorted section one element at a time, taking each new element and inserting it into its correct position among the already-sorted elements.',
+    example:'Like sorting a hand of playing cards — you pick up each new card and slot it into place among the ones you\u2019re already holding.',
+    pseudo:'for i from 1 to n-1\n  key = arr[i]\n  j = i - 1\n  while j >= 0 and arr[j] > key\n    arr[j+1] = arr[j]\n    j = j - 1\n  arr[j+1] = key',
+    c:{best:'O(n)', avg:'O(n\u00B2)', worst:'O(n\u00B2)', space:'O(1)'},
+    pros:['Fast on nearly-sorted data','Simple and stable'],
+    cons:['Slow on large, unsorted datasets'] },
+  merge: { group:'Sorting', name:'Merge Sort',
+    explain:'Merge Sort splits the array in half recursively until each piece has one element, then merges the pieces back together in sorted order.',
+    example:'Like splitting a deck of cards into halves repeatedly, then merging pairs of small sorted piles back into larger sorted piles.',
+    pseudo:'mergeSort(arr, lo, hi):\n  if lo < hi\n    mid = (lo + hi) / 2\n    mergeSort(arr, lo, mid)\n    mergeSort(arr, mid+1, hi)\n    merge(arr, lo, mid, hi)',
+    c:{best:'O(n log n)', avg:'O(n log n)', worst:'O(n log n)', space:'O(n)'},
+    pros:['Consistently fast, even in the worst case','Stable sort'],
+    cons:['Uses extra memory for merging'] },
+  quick: { group:'Sorting', name:'Quick Sort',
+    explain:'Quick Sort picks a pivot element, partitions the array so smaller values sit before it and larger values after, then recursively sorts each side.',
+    example:'Like picking one person as a reference height and splitting a line into "shorter" and "taller" groups, then repeating within each group.',
+    pseudo:'quickSort(arr, lo, hi):\n  if lo < hi\n    p = partition(arr, lo, hi)\n    quickSort(arr, lo, p-1)\n    quickSort(arr, p+1, hi)',
+    c:{best:'O(n log n)', avg:'O(n log n)', worst:'O(n\u00B2)', space:'O(log n)'},
+    pros:['Fast in practice, low memory overhead','Widely used as a general-purpose sort'],
+    cons:['Worst case is quadratic on unlucky pivots'] },
+  linear: { group:'Searching', name:'Linear Search',
+    explain:'Linear Search checks every element in order, one at a time, until it finds the target or reaches the end of the array.',
+    example:'Like scanning a shelf of unsorted books from left to right until you find the title you want.',
+    pseudo:'for i from 0 to n-1\n  if arr[i] == target\n    return i\nreturn -1',
+    c:{best:'O(1)', avg:'O(n)', worst:'O(n)', space:'O(1)'},
+    pros:['Works on any array, sorted or not','Simple to implement'],
+    cons:['Slow on large arrays compared to Binary Search'] },
+  binary: { group:'Searching', name:'Binary Search',
+    explain:'Binary Search repeatedly looks at the middle element of a sorted array and eliminates the half that cannot contain the target, narrowing the search fast.',
+    example:'Like looking up a name in a phone book by opening to the middle and deciding which half to search next.',
+    pseudo:'lo = 0, hi = n-1\nwhile lo <= hi\n  mid = (lo + hi) / 2\n  if arr[mid] == target: return mid\n  else if arr[mid] < target: lo = mid+1\n  else: hi = mid-1\nreturn -1',
+    c:{best:'O(1)', avg:'O(log n)', worst:'O(log n)', space:'O(1)'},
+    pros:['Very fast on large sorted arrays'],
+    cons:['Requires the array to be sorted first'] },
+  bfs: { group:'Graph', name:'Breadth-First Search',
+    explain:'Breadth-First Search explores a graph level by level: it visits the start node, then all of its neighbors, then all of their unvisited neighbors, using a queue to track what to visit next.',
+    example:'Like ripples spreading out from a stone dropped in water — everything one step away is reached before anything two steps away.',
+    pseudo:'BFS(start):\n  queue = [start]; visited = {start}\n  while queue is not empty\n    node = queue.dequeue()\n    for each neighbor of node\n      if neighbor not in visited\n        visited.add(neighbor)\n        queue.enqueue(neighbor)',
+    c:{best:'O(V+E)', avg:'O(V+E)', worst:'O(V+E)', space:'O(V)'},
+    pros:['Finds the shortest path in an unweighted graph','Explores methodically, level by level'],
+    cons:['Uses more memory than DFS for wide graphs'] },
+  dfs: { group:'Graph', name:'Depth-First Search',
+    explain:'Depth-First Search dives as deep as possible along one path before backtracking, using a stack (or recursion) to remember where to return to.',
+    example:'Like exploring a maze by always taking a new turn and only backtracking once you hit a dead end.',
+    pseudo:'DFS(start):\n  stack = [start]; visited = {}\n  while stack is not empty\n    node = stack.pop()\n    if node not in visited\n      visited.add(node)\n      for each neighbor of node\n        if neighbor not in visited\n          stack.push(neighbor)',
+    c:{best:'O(V+E)', avg:'O(V+E)', worst:'O(V+E)', space:'O(V)'},
+    pros:['Uses less memory than BFS on wide graphs','Natural fit for problems like cycle detection'],
+    cons:['Does not guarantee the shortest path'] },
+  dijkstra: { group:'Graph', name:"Dijkstra's Algorithm",
+    explain:'Dijkstra\u2019s Algorithm finds the shortest distance from a start node to every other node in a weighted graph, always expanding the closest unvisited node next.',
+    example:'Like a GPS finding the fastest route by always continuing from whichever reachable intersection currently has the shortest known travel time.',
+    pseudo:'Dijkstra(start):\n  dist[start] = 0, all others = \u221E\n  while unvisited nodes remain\n    u = unvisited node with smallest dist\n    mark u visited\n    for each neighbor v of u with weight w\n      if dist[u] + w < dist[v]\n        dist[v] = dist[u] + w',
+    c:{best:'O(E log V)', avg:'O(E log V)', worst:'O(E log V)', space:'O(V)'},
+    pros:['Guarantees the shortest path in graphs with non-negative weights'],
+    cons:['Does not work correctly with negative edge weights'] },
+};
+function buildSidebar(){
+  const sb = document.getElementById('detailsSidebar');
+  sb.innerHTML = '';
+  ['Sorting','Searching','Graph'].forEach(group=>{
+    const lbl = document.createElement('div'); lbl.className='sidebar-label'; lbl.textContent = group;
+    sb.appendChild(lbl);
+    Object.keys(DETAILS).filter(id=>DETAILS[id].group===group).forEach(id=>{
+      const item = document.createElement('button'); item.className='sidebar-item'; item.dataset.id=id;
+      item.textContent = DETAILS[id].name;
+      item.addEventListener('click', ()=>renderDetails(id));
+      sb.appendChild(item);
+    });
+  });
+}
+function renderDetails(id){
+  const d = DETAILS[id];
+  document.querySelectorAll('.sidebar-item').forEach(el=>el.classList.toggle('active', el.dataset.id===id));
+  const listify = arr => arr.map(x=>`<li>${x}</li>`).join('');
+  document.getElementById('detailsContent').innerHTML = `
+    <h3>${d.name}</h3>
+    <p class="sub">${d.explain}</p>
+    <h4>Real-world example</h4>
+    <p style="color:var(--sub);font-size:.9rem;">${d.example}</p>
+    <h4>Pseudocode</h4>
+    <div class="code-block">${d.pseudo}</div>
+    <h4>Complexity</h4>
+    <table class="complexity-table">
+      <tr><td>Best case</td><td>${d.c.best}</td></tr>
+      <tr><td>Average case</td><td>${d.c.avg}</td></tr>
+      <tr><td>Worst case</td><td>${d.c.worst}</td></tr>
+      <tr><td>Space</td><td>${d.c.space}</td></tr>
+    </table>
+    <h4>Advantages</h4><ul>${listify(d.pros)}</ul>
+    <h4>Limitations</h4><ul>${listify(d.cons)}</ul>
+    <button class="tryit-btn" id="tryItBtn">Try it Yourself \u00BB</button>`;
+  document.getElementById('tryItBtn').addEventListener('click', ()=>{ go('visualizer'); algoSelect.value=id; rebuild(); });
+}
+buildSidebar();
+renderDetails('bubble');
+
+// ---------- VISUALIZER ----------
+const stage = document.getElementById('stage');
+const sizeSlider = document.getElementById('sizeSlider');
+const speedSlider = document.getElementById('speedSlider');
+const algoSelect = document.getElementById('algoSelect');
+const statusText = document.getElementById('statusText');
+const compCountEl = document.getElementById('compCount');
+const swapCountEl = document.getElementById('swapCount');
+const stepCountEl = document.getElementById('stepCount');
+const stepTotalEl = document.getElementById('stepTotal');
+
+let array = [];
+let steps = [];      // precomputed list of {array, compare:[i,j]|null, swap:[i,j]|null, sortedIdx:[...]}
+let stepIndex = 0;
+let playing = false;
+let timer = null;
+
+function randomArray(n){
+  return Array.from({length:n}, ()=> 8 + Math.floor(Math.random()*180));
+}
+
+function buildSteps(algo, arr, target){
+  const a = arr.slice();
+  const out = [];
+  const snap = (compare, swap, sortedIdx, foundIdx) =>
+    out.push({array:a.slice(), compare, swap, sortedIdx: sortedIdx?sortedIdx.slice():[], foundIdx: foundIdx==null?null:foundIdx});
+
+  if(algo==='linear'){
+    let found=-1;
+    for(let i=0;i<a.length;i++){
+      snap([i], null, []);
+      if(a[i]===target){ found=i; break; }
+    }
+    snap(null,null,[], found>=0?found:null);
+  }
+  else if(algo==='binary'){
+    a.sort((x,y)=>x-y); // binary search requires a sorted array
+    let lo=0, hi=a.length-1, found=-1;
+    while(lo<=hi){
+      const mid=Math.floor((lo+hi)/2);
+      const outside=[]; for(let k=0;k<lo;k++)outside.push(k); for(let k=hi+1;k<a.length;k++)outside.push(k);
+      snap([mid], null, outside);
+      if(a[mid]===target){ found=mid; break; }
+      else if(a[mid]<target) lo=mid+1; else hi=mid-1;
+    }
+    const outside=[]; for(let k=0;k<lo;k++)outside.push(k); for(let k=hi+1;k<a.length;k++)outside.push(k);
+    snap(null,null,found>=0?[]:outside, found>=0?found:null);
+  }
+  else if(algo==='bubble'){
+    const n=a.length; let sorted=[];
+    for(let i=0;i<n-1;i++){
+      let swappedAny=false;
+      for(let j=0;j<n-1-i;j++){
+        snap([j,j+1], null, sorted);
+        if(a[j]>a[j+1]){ [a[j],a[j+1]]=[a[j+1],a[j]]; swappedAny=true; snap(null,[j,j+1],sorted); }
+      }
+      sorted.push(n-1-i);
+    }
+    for(let k=0;k<n;k++) if(!sorted.includes(k)) sorted.push(k);
+    snap(null,null,sorted);
+  }
+  else if(algo==='selection'){
+    const n=a.length; let sorted=[];
+    for(let i=0;i<n;i++){
+      let min=i;
+      for(let j=i+1;j<n;j++){
+        snap([min,j], null, sorted);
+        if(a[j]<a[min]) min=j;
+      }
+      if(min!==i){ [a[i],a[min]]=[a[min],a[i]]; snap(null,[i,min],sorted); }
+      sorted.push(i);
+    }
+    snap(null,null,sorted);
+  }
+  else if(algo==='insertion'){
+    const n=a.length;
+    for(let i=1;i<n;i++){
+      let j=i;
+      while(j>0){
+        snap([j-1,j], null, []);
+        if(a[j-1]>a[j]){ [a[j-1],a[j]]=[a[j],a[j-1]]; snap(null,[j-1,j],[]); j--; } else break;
+      }
+    }
+    snap(null,null,Array.from({length:n},(_,k)=>k));
+  }
+  else if(algo==='quick'){
+    const n=a.length; let sorted=[];
+    function partition(lo,hi){
+      const pivot=a[hi]; let i=lo;
+      for(let j=lo;j<hi;j++){
+        snap([j,hi], null, sorted);
+        if(a[j]<pivot){ [a[i],a[j]]=[a[j],a[i]]; snap(null,[i,j],sorted); i++; }
+      }
+      [a[i],a[hi]]=[a[hi],a[i]]; snap(null,[i,hi],sorted);
+      return i;
+    }
+    function qs(lo,hi){
+      if(lo<hi){ const p=partition(lo,hi); sorted.push(p); qs(lo,p-1); qs(p+1,hi); }
+      else if(lo===hi){ sorted.push(lo); }
+    }
+    qs(0,n-1);
+    for(let k=0;k<n;k++) if(!sorted.includes(k)) sorted.push(k);
+    snap(null,null,sorted);
+  }
+  else if(algo==='merge'){
+    function mergeSort(lo,hi){
+      if(hi-lo<=0) return;
+      const mid=Math.floor((lo+hi)/2);
+      mergeSort(lo,mid); mergeSort(mid+1,hi);
+      const left=a.slice(lo,mid+1), right=a.slice(mid+1,hi+1);
+      let i=0,j=0,k=lo;
+      while(i<left.length && j<right.length){
+        snap([lo+i, mid+1+j], null, []);
+        if(left[i]<=right[j]){ a[k]=left[i]; i++; } else { a[k]=right[j]; j++; }
+        snap(null,[k,k],[]); k++;
+      }
+      while(i<left.length){ a[k]=left[i]; snap(null,[k,k],[]); i++; k++; }
+      while(j<right.length){ a[k]=right[j]; snap(null,[k,k],[]); j++; k++; }
+    }
+    mergeSort(0,a.length-1);
+    snap(null,null,Array.from({length:a.length},(_,k)=>k));
+  }
+  return out;
+}
+
+function isGraphAlgo(){ return algoSelect.value==='bfs' || algoSelect.value==='dfs' || algoSelect.value==='dijkstra'; }
+
+function render(){
+  if(isGraphAlgo()) renderGraphStep(); else renderBars();
+}
+
+function renderBars(){
+  const step = steps[stepIndex] || {array, compare:null, swap:null, sortedIdx:[]};
+  const max = Math.max(...step.array, 1);
+  stage.innerHTML = '';
+  step.array.forEach((v,idx)=>{
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    if(step.sortedIdx.includes(idx)) bar.classList.add('sorted');
+    if(step.compare && step.compare.includes(idx)) bar.classList.add('compare');
+    if(step.swap && step.swap.includes(idx)) bar.classList.add('swap');
+    if(step.foundIdx===idx) bar.classList.add('found');
+    bar.style.height = (v/max*100)+'%';
+    stage.appendChild(bar);
+  });
+  // counts up to current step
+  let comps=0, swaps=0;
+  for(let i=0;i<=stepIndex;i++){
+    if(steps[i]?.compare) comps++;
+    if(steps[i]?.swap) swaps++;
+  }
+  compCountEl.textContent = comps;
+  swapCountEl.textContent = swaps;
+  stepCountEl.textContent = stepIndex;
+  stepTotalEl.textContent = steps.length ? steps.length-1 : 0;
+  const isSearch = algoSelect.value==='linear' || algoSelect.value==='binary';
+  const atEnd = stepIndex>=steps.length-1;
+  if(stepIndex===0) statusText.textContent = 'Idle — press Start';
+  else if(isSearch && atEnd) statusText.textContent = step.foundIdx!=null ? `Found at index ${step.foundIdx} ✔` : 'Not found in array';
+  else if(!isSearch && atEnd) statusText.textContent = 'Sorted! ✔';
+  else statusText.textContent = step.swap ? 'Swapping elements' : 'Comparing elements';
+}
+
+function renderGraphStep(){
+  const step = steps[stepIndex] || {current:null, visited:[], frontier:[], activeEdge:null, dist:null, msg:'Idle — press Start'};
+  GRAPH.nodes.forEach(n=>{
+    const circle = document.getElementById('gnode-'+n.id);
+    if(!circle) return;
+    circle.classList.remove('current','visited','frontier');
+    if(step.current===n.id) circle.classList.add('current');
+    else if(step.visited && step.visited.includes(n.id)) circle.classList.add('visited');
+    else if(step.frontier && step.frontier.includes(n.id)) circle.classList.add('frontier');
+    const distEl = document.getElementById('gdist-'+n.id);
+    if(distEl){
+      const dv = step.dist ? step.dist[n.id] : null;
+      if(dv!=null && dv<Infinity){ distEl.textContent = dv; distEl.style.display=''; }
+      else distEl.style.display='none';
+    }
+  });
+  GRAPH.edges.forEach(e=>{
+    const line = document.getElementById(`gedge-${e.a}-${e.b}`);
+    if(!line) return;
+    const active = step.activeEdge && ((step.activeEdge.a===e.a&&step.activeEdge.b===e.b)||(step.activeEdge.a===e.b&&step.activeEdge.b===e.a));
+    line.classList.toggle('active', !!active);
+  });
+  compCountEl.textContent = step.visited ? step.visited.length + (step.current?1:0) : 0;
+  swapCountEl.textContent = step.frontier ? step.frontier.length : 0;
+  stepCountEl.textContent = stepIndex;
+  stepTotalEl.textContent = steps.length ? steps.length-1 : 0;
+  statusText.textContent = step.msg || 'Idle — press Start';
+}
+
+const targetRow = document.getElementById('targetRow');
+const targetInput = document.getElementById('targetInput');
+const graphCtrlGroup = document.getElementById('graphCtrlGroup');
+const sizeCtrlGroup = document.getElementById('sizeCtrlGroup');
+const graphStageEl = document.getElementById('graphStage');
+const startNodeSelect = document.getElementById('startNodeSelect');
+function isSearchAlgo(){ return algoSelect.value==='linear' || algoSelect.value==='binary'; }
+function getTarget(){ return parseInt(targetInput.value,10); }
+
+function setModeUI(isGraph){
+  stage.style.display = isGraph ? 'none' : 'flex';
+  graphStageEl.style.display = isGraph ? 'block' : 'none';
+  sizeCtrlGroup.style.display = isGraph ? 'none' : 'flex';
+  graphCtrlGroup.style.display = isGraph ? 'flex' : 'none';
+  if(isGraph) targetRow.style.display = 'none';
+  document.getElementById('compLabel').textContent = isGraph ? 'Visited' : 'Comparisons';
+  document.getElementById('swapLabel').textContent = isGraph ? 'Frontier' : 'Swaps';
+}
+
+function regenerateSteps(){
+  steps = isGraphAlgo() ? buildGraphSteps(algoSelect.value, startNodeSelect.value) : buildSteps(algoSelect.value, array, getTarget());
+  stepIndex = 0;
+  render();
+}
+
+function rebuild(){
+  pause();
+  if(isGraphAlgo()){
+    setModeUI(true);
+    const ids = GRAPH.nodes.map(n=>n.id);
+    startNodeSelect.value = ids[Math.floor(Math.random()*ids.length)];
+  } else {
+    setModeUI(false);
+    array = randomArray(parseInt(sizeSlider.value,10));
+    targetRow.style.display = isSearchAlgo() ? 'flex' : 'none';
+    if(isSearchAlgo()){ targetInput.value = array[Math.floor(Math.random()*array.length)]; }
+  }
+  regenerateSteps();
+}
+targetInput.addEventListener('input', ()=>{ if(isSearchAlgo()){ pause(); regenerateSteps(); } });
+startNodeSelect.addEventListener('change', ()=>{ pause(); regenerateSteps(); });
+
+function pause(){
+  playing = false;
+  clearTimeout(timer);
+}
+
+function stepForward(){
+  if(stepIndex < steps.length-1){ stepIndex++; render(); return true; }
+  return false;
+}
+
+function loop(){
+  if(!playing) return;
+  const advanced = stepForward();
+  if(!advanced){ playing=false; return; }
+  const delay = 620 - (speedSlider.value*6); // faster slider -> shorter delay
+  timer = setTimeout(loop, Math.max(10,delay));
+}
+
+document.getElementById('randomizeBtn').addEventListener('click', rebuild);
+sizeSlider.addEventListener('change', rebuild);
+algoSelect.addEventListener('change', rebuild);
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  if(stepIndex>=steps.length-1) return;
+  playing = true; loop();
+  const meta = ALGORITHMS.find(x=>x.id===algoSelect.value);
+  markAlgoExplored(meta ? meta.name : algoSelect.value);
+});
+document.getElementById('pauseBtn').addEventListener('click', pause);
+document.getElementById('stepBtn').addEventListener('click', ()=>{ pause(); stepForward(); });
+document.getElementById('resetBtn').addEventListener('click', rebuild);
+
+// ---------- GRAPH DATA & ALGORITHMS ----------
+const GRAPH = {
+  nodes: [
+    {id:'A', x:70, y:70}, {id:'B', x:210, y:40}, {id:'C', x:360, y:60}, {id:'D', x:520, y:50},
+    {id:'E', x:140, y:190}, {id:'F', x:310, y:190}, {id:'G', x:470, y:190}, {id:'H', x:590, y:140},
+    {id:'I', x:230, y:290}
+  ],
+  edges: [
+    {a:'A',b:'B',w:4}, {a:'A',b:'E',w:2}, {a:'B',b:'C',w:5}, {a:'B',b:'F',w:3},
+    {a:'C',b:'D',w:2}, {a:'C',b:'G',w:6}, {a:'D',b:'H',w:3}, {a:'E',b:'F',w:4},
+    {a:'F',b:'G',w:2}, {a:'G',b:'H',w:4}, {a:'F',b:'I',w:6}, {a:'E',b:'I',w:5}
+  ]
+};
+const ADJ = {};
+GRAPH.nodes.forEach(n=>ADJ[n.id]=[]);
+GRAPH.edges.forEach(e=>{ ADJ[e.a].push({to:e.b,w:e.w}); ADJ[e.b].push({to:e.a,w:e.w}); });
+
+function buildGraphSVG(){
+  const ns = 'http://www.w3.org/2000/svg';
+  graphStageEl.innerHTML = '';
+  GRAPH.edges.forEach(e=>{
+    const n1 = GRAPH.nodes.find(n=>n.id===e.a), n2 = GRAPH.nodes.find(n=>n.id===e.b);
+    const line = document.createElementNS(ns,'line');
+    line.setAttribute('id', `gedge-${e.a}-${e.b}`);
+    line.setAttribute('x1', n1.x); line.setAttribute('y1', n1.y);
+    line.setAttribute('x2', n2.x); line.setAttribute('y2', n2.y);
+    line.setAttribute('class','gedge-line');
+    graphStageEl.appendChild(line);
+    const wt = document.createElementNS(ns,'text');
+    wt.setAttribute('x', (n1.x+n2.x)/2); wt.setAttribute('y', (n1.y+n2.y)/2 - 6);
+    wt.setAttribute('class','gedge-weight'); wt.textContent = e.w;
+    graphStageEl.appendChild(wt);
+  });
+  GRAPH.nodes.forEach(n=>{
+    const circle = document.createElementNS(ns,'circle');
+    circle.setAttribute('id', `gnode-${n.id}`);
+    circle.setAttribute('cx', n.x); circle.setAttribute('cy', n.y); circle.setAttribute('r', 20);
+    circle.setAttribute('class','gnode-circle');
+    graphStageEl.appendChild(circle);
+    const label = document.createElementNS(ns,'text');
+    label.setAttribute('x', n.x); label.setAttribute('y', n.y);
+    label.setAttribute('class','gnode-label'); label.textContent = n.id;
+    graphStageEl.appendChild(label);
+    const dist = document.createElementNS(ns,'text');
+    dist.setAttribute('id', `gdist-${n.id}`);
+    dist.setAttribute('x', n.x); dist.setAttribute('y', n.y+34);
+    dist.setAttribute('class','gdist-label'); dist.style.display='none';
+    graphStageEl.appendChild(dist);
+  });
+}
+startNodeSelect.innerHTML = GRAPH.nodes.map(n=>`<option value="${n.id}">${n.id}</option>`).join('');
+buildGraphSVG();
+
+function bfsSteps(start){
+  const out=[]; const visited=new Set([start]); const queue=[start]; const order=[];
+  out.push({current:null, visited:[], frontier:queue.slice(), activeEdge:null, dist:null, msg:`Start BFS at ${start}`});
+  while(queue.length){
+    const node = queue.shift();
+    out.push({current:node, visited:order.slice(), frontier:queue.slice(), activeEdge:null, dist:null, msg:`Visiting ${node}`});
+    order.push(node);
+    ADJ[node].map(x=>x.to).sort().forEach(nb=>{
+      if(!visited.has(nb)){
+        visited.add(nb); queue.push(nb);
+        out.push({current:node, visited:order.slice(), frontier:queue.slice(), activeEdge:{a:node,b:nb}, dist:null, msg:`Discovered ${nb} from ${node}`});
+      }
+    });
+  }
+  out.push({current:null, visited:order.slice(), frontier:[], activeEdge:null, dist:null, msg:`BFS order: ${order.join(' \u2192 ')}`});
+  return out;
+}
+function dfsSteps(start){
+  const out=[]; const visited=new Set(); const stack=[start]; const order=[];
+  out.push({current:null, visited:[], frontier:stack.slice(), activeEdge:null, dist:null, msg:`Start DFS at ${start}`});
+  while(stack.length){
+    const node = stack.pop();
+    if(visited.has(node)) continue;
+    visited.add(node);
+    out.push({current:node, visited:order.slice(), frontier:stack.slice(), activeEdge:null, dist:null, msg:`Visiting ${node}`});
+    order.push(node);
+    ADJ[node].map(x=>x.to).sort().reverse().forEach(nb=>{
+      if(!visited.has(nb)){
+        stack.push(nb);
+        out.push({current:node, visited:order.slice(), frontier:stack.slice(), activeEdge:{a:node,b:nb}, dist:null, msg:`Pushed ${nb}`});
+      }
+    });
+  }
+  out.push({current:null, visited:order.slice(), frontier:[], activeEdge:null, dist:null, msg:`DFS order: ${order.join(' \u2192 ')}`});
+  return out;
+}
+function dijkstraSteps(start){
+  const out=[]; const dist={}; GRAPH.nodes.forEach(n=>dist[n.id]=Infinity); dist[start]=0;
+  const visited=new Set(); const order=[];
+  out.push({current:null, visited:[], frontier:[], activeEdge:null, dist:{...dist}, msg:`Start Dijkstra at ${start}`});
+  while(visited.size < GRAPH.nodes.length){
+    let u=null, best=Infinity;
+    GRAPH.nodes.forEach(n=>{ if(!visited.has(n.id) && dist[n.id]<best){ best=dist[n.id]; u=n.id; } });
+    if(u===null) break;
+    visited.add(u); order.push(u);
+    out.push({current:u, visited:order.slice(), frontier:[], activeEdge:null, dist:{...dist}, msg:`Visiting ${u} (distance ${dist[u]})`});
+    ADJ[u].forEach(({to,w})=>{
+      if(!visited.has(to) && dist[u]+w < dist[to]){
+        dist[to] = dist[u]+w;
+        out.push({current:u, visited:order.slice(), frontier:[], activeEdge:{a:u,b:to}, dist:{...dist}, msg:`Relax ${u}\u2192${to}: distance ${dist[to]}`});
+      }
+    });
+  }
+  out.push({current:null, visited:order.slice(), frontier:[], activeEdge:null, dist:{...dist}, msg:`Dijkstra complete from ${start}`});
+  return out;
+}
+function buildGraphSteps(algo, start){
+  if(algo==='bfs') return bfsSteps(start);
+  if(algo==='dfs') return dfsSteps(start);
+  if(algo==='dijkstra') return dijkstraSteps(start);
+  return [];
+}
+
+rebuild();
+
+// ---------- QUIZ ----------
+const QUIZ = [
+  {q:'What is the time complexity of Binary Search?', opts:['O(n)','O(log n)','O(n log n)','O(1)'], a:1},
+  {q:'Which data structure uses LIFO order?', opts:['Queue','Stack','Linked List','Array'], a:1},
+  {q:'Which sort has the best worst-case time complexity?', opts:['Bubble Sort','Selection Sort','Merge Sort','Insertion Sort'], a:2},
+  {q:'What does BFS use to track which node to visit next?', opts:['Stack','Queue','Priority Queue','Array'], a:1},
+  {q:'What is the space complexity of Bubble Sort?', opts:['O(1)','O(n)','O(n log n)','O(n²)'], a:0},
+  {q:'Which structure connects nodes using pointers instead of indices?', opts:['Array','Linked List','Hash Map','Matrix'], a:1},
+  {q:'Binary Search requires the input array to be…', opts:['Reversed','Sorted','Unique values only','A perfect square length'], a:1},
+  {q:'What does DFS use, conceptually, to explore a graph?', opts:['A queue','A stack (or recursion)', 'A hash map','A sorted array'], a:1},
+  {q:'Which algorithm finds shortest paths in a weighted graph?', opts:["Dijkstra's Algorithm",'Binary Search','Bubble Sort','DFS'], a:0},
+  {q:'Quick Sort\u2019s average-case time complexity is…', opts:['O(n²)','O(n)','O(n log n)','O(log n)'], a:2},
+];
+let quizIdx = 0, quizScore = 0, quizAnswered = false;
+const quizPanel = document.getElementById('quizPanel');
+
+function renderQuiz(){
+  if(quizIdx >= QUIZ.length){
+    quizPanel.innerHTML = `<div class="quiz-result">
+        <div style="color:var(--sub)">Quiz complete</div>
+        <div class="score">${quizScore} / ${QUIZ.length}</div>
+        <button class="btn btn-primary btn-sm" id="quizRestart">Restart Quiz</button>
+      </div>`;
+    markQuizScore(quizScore);
+    document.getElementById('quizRestart').addEventListener('click', ()=>{ quizIdx=0; quizScore=0; renderQuiz(); });
+    return;
+  }
+  const item = QUIZ[quizIdx];
+  quizAnswered = false;
+  quizPanel.innerHTML = `<div class="quiz-progress">Question ${quizIdx+1} of ${QUIZ.length} &middot; Score ${quizScore}</div>
+    <p class="quiz-q">${item.q}</p>
+    <div id="quizOpts"></div>
+    <button class="btn btn-ghost btn-sm" id="quizNext" style="display:none;">Next Question</button>`;
+  const optsWrap = document.getElementById('quizOpts');
+  item.opts.forEach((opt,i)=>{
+    const b = document.createElement('button');
+    b.className = 'quiz-opt'; b.textContent = opt;
+    b.addEventListener('click', ()=>{
+      if(quizAnswered) return;
+      quizAnswered = true;
+      [...optsWrap.children].forEach((c,ci)=>{
+        c.disabled = true;
+        if(ci===item.a) c.classList.add('correct');
+        else if(ci===i) c.classList.add('wrong');
+      });
+      if(i===item.a) quizScore++;
+      document.getElementById('quizNext').style.display = 'inline-block';
+    });
+    optsWrap.appendChild(b);
+  });
+  document.getElementById('quizNext').addEventListener('click', ()=>{ quizIdx++; renderQuiz(); });
+}
+renderQuiz();
+</script>
+</body>
+</html>
